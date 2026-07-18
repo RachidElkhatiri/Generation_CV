@@ -1,0 +1,232 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    color: #2d2d2d;
+    background: #fff;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 50px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding-bottom: 25px;
+    border-bottom: 2px solid #1a1a2e;
+    margin-bottom: 25px;
+}
+
+.photo img {
+    width:120px;
+    height: 120Px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #1a1a2e;
+}
+
+.header-info h1 {
+    font-size: 24pt;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: 0.5px;
+}
+
+.header-info .job-title {
+    font-size: 12pt;
+    color: #555;
+    margin-top: 2px;
+}
+
+.header-info .contact {
+    margin-top: 12px;
+    font-size: 9.5pt;
+    color: #666;
+}
+
+.header-info .contact span {
+    margin-right: 20px;
+}
+
+.header-info .contact a {
+    color: #1a1a2e;
+    text-decoration: none;
+}
+
+.header-info .contact a:hover {
+    text-decoration: underline;
+}
+
+/* Sections */
+.section {
+    margin-bottom: 22px;
+}
+
+.section h2 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #1a1a2e;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Profil */
+.profil p {
+    color: #444;
+    text-align: justify;
+    font-size: 10pt;
+}
+
+/* Compétences */
+.skills {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 30px;
+}
+
+.skill-item {
+    display: flex;
+    gap: 8px;
+    font-size: 10pt;
+}
+
+.skill-item .label {
+    font-weight: 600;
+    color: #1a1a2e;
+    min-width: 140px;
+}
+
+.skill-item .value {
+    color: #555;
+}
+
+/* Expérience */
+.exp-item {
+    margin-bottom: 18px;
+}
+
+.exp-item .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+}
+
+.exp-item h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.exp-item .date {
+    font-size: 9.5pt;
+    color: #777;
+}
+
+.exp-item .company {
+    font-size: 10pt;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.exp-item ul {
+    padding-left: 18px;
+    font-size: 10pt;
+    color: #444;
+}
+
+.exp-item ul li {
+    margin-bottom: 4px;
+}
+
+/* Projets */
+.project {
+    margin-bottom: 15px;
+}
+
+.project h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.project p {
+    font-size: 9.5pt;
+    color: #555;
+    text-align: justify;
+    margin-bottom: 6px;
+}
+
+.project .tech {
+    font-size: 9pt;
+    color: #1a1a2e;
+}
+
+/* Formation */
+.edu-item {
+    margin-bottom: 12px;
+}
+
+.edu-item .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.edu-item h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.edu-item .edu-date {
+    font-size: 9.5pt;
+    color: #777;
+}
+
+.edu-item .school {
+    font-size: 9.5pt;
+    color: #666;
+}
+
+/* Langues */
+.langues {
+    display: flex;
+    gap: 30px;
+}
+
+.langues span {
+    font-size: 10pt;
+}
+
+.langues strong {
+    color: #1a1a2e;
+}
+
+/* Footer */
+.footer {
+    margin-top: 30px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    font-size: 8.5pt;
+    color: #999;
+}
+
+@media print {
+    body {
+        padding: 20px 30px;
+    }
+}
