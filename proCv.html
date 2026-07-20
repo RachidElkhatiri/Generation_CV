@@ -142,12 +142,12 @@
       <div class="project">
         <h3>Gestion des Convocations – Architecture Microservices</h3>
         <p>
-          Conception et développement d'une plateforme complète de gestion des
-          convocations basée sur une architecture microservices. Le système
-          permet l'import de fichiers Excel via Apache POI, la gestion
-          géographique des provinces et centres, l'attribution automatique des
-          candidats selon des règles métier, ainsi qu'une interface web moderne
-          développée avec Angular.
+          Plateforme web enterprise de gestion des convocations pour un organisme
+          public, traitant des dizaines de milliers de dossiers. Le système
+          centralise l'import massif de données depuis des fichiers Excel, gère
+          l'attribution automatique des candidats selon des règles métier
+          géographiques, et fournit un suivi en temps réel via une interface
+          Angular moderne.
         </p>
         <ul
           style="
@@ -157,26 +157,35 @@
             color: #444;
           "
         >
-          <li>Conception d'architecture distribuée avec API Gateway</li>
-          <li>Import et traitement de données Excel (Apache POI)</li>
           <li>
-            Modélisation de la base Oracle et communication inter-services
+            Réduction du traitement manuel de 70% grâce à l'automatisation de
+            l'attribution des candidats
           </li>
-          <li>Automatisation des processus métier et validation des données</li>
+          <li>
+            Import et traitement de fichiers Excel de 10 000+ lignes avec
+            validation métier en temps réel
+          </li>
+          <li>
+            Architecture microservices scalable avec API Gateway, assurant la
+            disponibilité 24/7
+          </li>
+          <li>
+            Modélisation Oracle optimisée pour les requêtes complexes et les
+            rapports géographiques
+          </li>
         </ul>
         <div class="tech">
           Spring Boot • Angular • Oracle • Docker • Apache POI • JPA/Hibernate
         </div>
       </div>
       <div class="project">
-        <h3>Microservice de Génération Automatique des Diplômes</h3>
+        <h3>Moteur de Génération de PDF Bilingues</h3>
         <p>
-          Conception et développement d'un microservice REST indépendant,
-          sécurisé et hautement réutilisable capable de produire automatiquement
-          des diplômes PDF multilingues (Français/Arabe) à partir des données
-          des candidats. Le service intègre une architecture générique avec
-          UUID, audit et héritage, une documentation complète via
-          Swagger/OpenAPI, et une interface d'administration avec Thymeleaf.
+          Microservice REST autonome pour la génération automatique de diplômes
+          PDF bilingues (Français/Arabe) destiné à un organisme de formation.
+          Le service a remplacé un processus manuel chronophage, réduisant le
+          temps de production de plusieurs heures à quelques secondes par
+          diplôme.
         </p>
         <ul
           style="
@@ -186,10 +195,22 @@
             color: #444;
           "
         >
-          <li>Développement avec Java 21 et Spring Boot 3</li>
-          <li>Sécurisation des API avec Spring Security</li>
-          <li>Génération de PDF multilingues avec contrôle du rendu</li>
-          <li>Interface d'administration web avec Thymeleaf</li>
+          <li>
+            Génération automatique de PDF bilingues avec mise en page
+            professionnelle et contrôle du rendu
+          </li>
+          <li>
+            Sécurisation des API avec Spring Security et documentation
+            Swagger/OpenAPI pour une intégration facile
+          </li>
+          <li>
+            Architecture générique réutilisable pour d'autres types de
+            documents (attestations, certificats)
+          </li>
+          <li>
+            Interface d'administration avec Thymeleaf pour le suivi et la
+            gestion des générations
+          </li>
         </ul>
         <div class="tech">
           Java 21 • Spring Boot 3 • Spring Security • Oracle • Swagger •
@@ -224,6 +245,21 @@
         <span><strong>Français</strong> – Courant</span>
         <span><strong>Anglais</strong> – Technique</span>
         <span><strong>Arabe</strong> – Natif</span>
+      </div>
+    </div>
+
+    <!-- TÉLÉCHARGEMENTS -->
+    <div class="section">
+      <h2>Téléchargements</h2>
+      <div class="downloads">
+        <a href="/download/pdf" class="download-btn download-pdf">
+          <span class="download-icon">📄</span>
+          <span class="download-text">Télécharger en PDF</span>
+        </a>
+        <a href="/download/docx" class="download-btn download-docx">
+          <span class="download-icon">📝</span>
+          <span class="download-text">Télécharger en Word (.docx)</span>
+        </a>
       </div>
     </div>
 
