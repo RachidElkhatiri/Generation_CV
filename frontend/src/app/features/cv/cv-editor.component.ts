@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl } from '@angular/forms';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,6 +20,7 @@ import { Cv } from '../../models/cv.model';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterLink,
     MatCardModule,
     MatTabsModule,
     MatFormFieldModule,
@@ -37,19 +39,19 @@ import { Cv } from '../../models/cv.model';
         </div>
       }
 
-      @if (!loading && !cv) {
+      @if (!loading && isNewMode) {
         <mat-card class="welcome-card">
           <mat-card-header>
-            <mat-card-title>Bienvenue</mat-card-title>
-            <mat-card-subtitle>Créez votre premier CV</mat-card-subtitle>
+            <mat-card-title>Nouveau CV</mat-card-title>
+            <mat-card-subtitle>Créez un CV vide et remplissez-le via l'éditeur</mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
-            <p>Aucun CV trouvé. Cliquez sur le bouton ci-dessous pour commencer.</p>
+            <p>Cliquez sur le bouton ci-dessous pour initialiser un nouveau CV.</p>
           </mat-card-content>
           <mat-card-actions>
-            <button mat-raised-button color="primary" (click)="createNewCv()">
+            <button mat-raised-button color="primary" (click)="createNewCv()" [disabled]="saving">
               <mat-icon>add</mat-icon>
-              Créer un CV
+              {{ saving ? 'Création...' : 'Créer un CV' }}
             </button>
           </mat-card-actions>
         </mat-card>
@@ -57,11 +59,17 @@ import { Cv } from '../../models/cv.model';
 
       @if (cv) {
         <div class="editor-header">
-          <h2>Éditeur de CV</h2>
+          <h2>{{ cv.id ? 'Éditeur de CV' : 'Nouveau CV' }}</h2>
           <div class="actions">
+            <button mat-stroked-button color="primary" [routerLink]="['/cv', cv.id, 'preview']">
+              <mat-icon>visibility</mat-icon> Prévisualiser
+            </button>
+            <button mat-stroked-button color="primary" routerLink="/cv/new">
+              <mat-icon>note_add</mat-icon> Nouveau CV
+            </button>
             <button mat-raised-button color="accent" (click)="saveCv()" [disabled]="saving">
               <mat-icon>save</mat-icon>
-              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+              {{ saving ? 'Enregistrement...' : (isNewCv ? 'Créer' : 'Enregistrer') }}
             </button>
           </div>
         </div>
@@ -427,10 +435,14 @@ export class CvEditorComponent implements OnInit {
   private fb = inject(FormBuilder);
   private cvService = inject(CvService);
   private snackBar = inject(MatSnackBar);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   cv: Cv | null = null;
   loading = true;
   saving = false;
+  isNewCv = false;
+  isNewMode = false;
 
   profilForm = this.fb.group({
     fullName: [''],
@@ -455,26 +467,39 @@ export class CvEditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadCv();
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) {
+        this.isNewMode = false;
+        this.loadCv(Number(id));
+      } else {
+        this.isNewMode = true;
+        this.loading = false;
+      }
+    });
   }
 
-  loadCv(): void {
+  loadCv(id: number): void {
     this.loading = true;
-    this.cvService.getCv(1).subscribe({
+    this.cvService.getCv(id).subscribe({
       next: (cv) => {
         this.cv = cv;
+        this.isNewCv = false;
         this.populateForm(cv);
         this.loading = false;
       },
       error: () => {
         this.cv = null;
         this.loading = false;
+        this.snackBar.open('CV introuvable', 'Fermer', { duration: 3000 });
+        this.router.navigate(['/cv/new']);
       }
     });
   }
 
   createNewCv(): void {
-    const newCv: Partial<Cv> = {
+    this.saving = true;
+    const emptyCv: Partial<Cv> = {
       personalInfo: {
         fullName: '',
         jobTitle: '',
@@ -492,13 +517,18 @@ export class CvEditorComponent implements OnInit {
       languages: []
     };
 
-    this.cvService.createCv(newCv).subscribe({
+    this.cvService.createCv(emptyCv).subscribe({
       next: (cv) => {
         this.cv = cv;
+        this.isNewCv = true;
+        this.isNewMode = false;
         this.populateForm(cv);
+        this.saving = false;
+        this.router.navigate(['/cv', cv.id]);
         this.snackBar.open('CV créé avec succès', 'Fermer', { duration: 3000 });
       },
       error: () => {
+        this.saving = false;
         this.snackBar.open('Erreur lors de la création du CV', 'Fermer', { duration: 3000 });
       }
     });
@@ -613,11 +643,8 @@ export class CvEditorComponent implements OnInit {
     this.languagesArray.removeAt(index);
   }
 
-  saveCv(): void {
-    if (!this.cv) return;
-    this.saving = true;
-
-    const updatedCv: Partial<Cv> = {
+  buildCvPayload(): Partial<Cv> {
+    return {
       personalInfo: this.profilForm.value as any,
       profileSummary: this.profileSummaryControl.value || '',
       experiences: this.experiencesArray.value as any[],
@@ -627,17 +654,39 @@ export class CvEditorComponent implements OnInit {
       projects: this.projectsArray.value as any[],
       languages: this.languagesArray.value as any[]
     };
+  }
 
-    this.cvService.updateCv(this.cv.id, updatedCv).subscribe({
-      next: (cv) => {
-        this.cv = cv;
-        this.saving = false;
-        this.snackBar.open('CV enregistré avec succès', 'Fermer', { duration: 3000 });
-      },
-      error: () => {
-        this.saving = false;
-        this.snackBar.open('Erreur lors de l\'enregistrement', 'Fermer', { duration: 3000 });
-      }
-    });
+  saveCv(): void {
+    this.saving = true;
+    const payload = this.buildCvPayload();
+
+    if (this.cv?.id) {
+      this.cvService.updateCv(this.cv.id, payload).subscribe({
+        next: (cv) => {
+          this.cv = cv;
+          this.isNewCv = false;
+          this.saving = false;
+          this.snackBar.open('CV enregistré avec succès', 'Fermer', { duration: 3000 });
+        },
+        error: () => {
+          this.saving = false;
+          this.snackBar.open('Erreur lors de l\'enregistrement', 'Fermer', { duration: 3000 });
+        }
+      });
+    } else {
+      this.cvService.createCv(payload).subscribe({
+        next: (cv) => {
+          this.cv = cv;
+          this.isNewCv = false;
+          this.saving = false;
+          this.router.navigate(['/cv', cv.id]);
+          this.snackBar.open('CV créé avec succès', 'Fermer', { duration: 3000 });
+        },
+        error: () => {
+          this.saving = false;
+          this.snackBar.open('Erreur lors de la création du CV', 'Fermer', { duration: 3000 });
+        }
+      });
+    }
   }
 }

@@ -22,7 +22,7 @@ L'application est lancée par `CvSimpleApplication.java`, une classe annotée `@
 
 Le cœur du modèle de données repose sur l'entité `CV.java` qui représente un curriculum vitae complet. Cette entité contient :
 
-- **`PersonalInfo`** — un objet `@Embeddable` intégré directement dans la table `cvs`, contenant `fullName`, `jobTitle`, `location`, `email`, `linkedInUrl` et `photoUrl`. Les champs `fullName` et `jobTitle` sont obligatoires (`@NotBlank`), et `email` est validé avec `@Email`.
+- **`PersonalInfo`** — un objet `@Embeddable` intégré directement dans la table `cvs`, contenant `fullName`, `jobTitle`, `location`, `email`, `linkedInUrl` et `photoUrl`. Les champs `fullName` et `jobTitle` sont optionnels à la création (permettant de créer un CV vide puis de le remplir via l'éditeur), et `email` est validé avec `@Email`.
 - **`profileSummary`** — un texte libre stocké en `CLOB` pour le résumé du profil.
 - **6 collections `@OneToMany`** avec `cascade = ALL` et `orphanRemoval = true` : `Certification`, `Skill`, `Experience`, `Project`, `Formation`, `Language`. Chaque sous-entité a sa propre table (ex: `certifications`, `skills`, `experiences`, `projects`, `formations`, `languages`) liée par une clé étrangère `cv_id`.
 - Des timestamps `createdAt` et `updatedAt` gérés automatiquement par Hibernate (`@CreationTimestamp`, `@UpdateTimestamp`).
@@ -85,6 +85,20 @@ Chaque endpoint est documenté avec `@Operation(summary = "...")` pour Swagger/O
 
 Spring Boot 3.3.5, Java 21, Spring Data JPA, Spring Validation, Lombok, MapStruct 1.6.3, SpringDoc OpenAPI 2.6.0, Oracle JDBC (ojdbc11), H2 (runtime), Flyway.
 
+### Chargement automatique des données (DataInitializer)
+
+`DataInitializer.java` est un composant Spring implémentant `CommandLineRunner` qui s'exécute automatiquement au démarrage de l'application. Si la base de données est vide (`cvRepository.count() == 0`), il insère un CV complet avec des données réelles :
+
+- **1 CV** avec les informations personnelles de Rachid Elkhatiri (nom, titre, localisation, email, LinkedIn, photo, résumé du profil).
+- **3 certifications** : OCP Java 17, OCP Java 21, Scrum Foundation Professional Certificate.
+- **6 compétences** : Back-end (Java/Spring Boot/Hibernate), Front-end (Angular/TypeScript), BDD (Oracle/PostgreSQL), Architecture (Microservices/REST), DevOps (Docker/Git/CI), Qualité (JUnit/Mockito/TDD).
+- **1 expérience** : Développeur Full-Stack Java/Angular chez ADN à Rabat, avec 5 responsabilités détaillées.
+- **2 projets** : Gestion des Convocations (architecture microservices, import Excel, attribution automatique) et Moteur de Génération de PDF Bilingues (Spring Boot/Spring Security/Thymeleaf).
+- **2 formations** : Master en Ingénierie des SI et Licence Professionnelle en IS, toutes deux à Sup MTI Rabat.
+- **3 langues** : Français (Courant), Anglais (Technique), Arabe (Natif).
+
+Ce mécanisme permet de démarrer l'application avec des données de démonstration sans aucune intervention manuelle. Les données sont réinitialisées à chaque redémarrage car le profil `test` utilise `ddl-auto: create-drop`.
+
 ---
 
 ## Frontend — Angular 17 / Angular Material
@@ -95,7 +109,9 @@ Le frontend utilise Angular 17 avec le mode **standalone components** (pas de `N
 
 ### Routing
 
-`app.routes.ts` définit une route principale avec `LayoutComponent` comme coque (header + `<router-outlet>`), et une route enfant `/cv` qui lazy-charge `CvEditorComponent`.
+`app.routes.ts` définit une route principale avec `LayoutComponent` comme coque (header + `<router-outlet>`), et deux routes enfants lazy-loaded :
+- `/cv` → `CvEditorComponent` (éditeur de CV avec formulaires réactifs)
+- `/cv/preview` → `CvPreviewComponent` (visualisation et impression du CV)
 
 ### Layout
 
@@ -105,6 +121,10 @@ Le frontend utilise Angular 17 avec le mode **standalone components** (pas de `N
 ### CvEditorComponent — Le composant principal
 
 C'est le composant cœur de l'application, situé dans `features/cv/cv-editor.component.ts`. Il gère l'édition complète du CV via un formulaire réactif Angular.
+
+**Barre d'actions :** Le header de l'éditeur contient deux boutons :
+- **"Prévisualiser"** (`mat-stroked-button`) — redirige vers `/cv/preview` pour visualiser le CV avec le design formaté.
+- **"Enregistrer"** (`mat-raised-button color="accent"`) — sauvegarde les modifications via `PUT /api/cv/{id}`.
 
 **États de l'interface :**
 1. **Chargement** : affiche un `mat-spinner` pendant le chargement initial.
@@ -138,6 +158,33 @@ C'est le composant cœur de l'application, situé dans `features/cv/cv-editor.co
 
 Les modules utilisés sont : `MatCardModule`, `MatTabsModule`, `MatFormFieldModule`, `MatInputModule`, `MatButtonModule`, `MatIconModule`, `MatDividerModule`, `MatSnackBarModule`, `MatProgressSpinnerModule`, `MatToolbarModule`. Les animations sont fournies via `provideAnimationsAsync()`.
 
+### CvPreviewComponent — Visualisation du CV
+
+`cv-preview.component.ts` est le composant de visualisation dynamique du CV, situé dans `features/cv-preview/`. Il remplace la page HTML statique `proCv.html` en récupérant les données depuis le backend via l'API REST.
+
+**Fonctionnement :** Au chargement, le composant appelle `CvService.getCv(1)` pour récupérer le CV depuis le backend. Les données sont ensuite injectées dans le template Angular, qui génère dynamiquement chaque section du CV.
+
+**Sections affichées :**
+1. **En-tête** — photo de profil (ronde avec bordure sombre), nom complet en grand, titre du poste, localisation, email (lien mailto), LinkedIn (lien externe).
+2. **Profil** — paragraphe de résumé du profil professionnel.
+3. **Certifications** — liste avec icône trophée, nom et description.
+4. **Compétences** — grille 2 colonnes avec catégories et valeurs.
+5. **Expériences** — chaque expérience avec titre, dates (début – présent ou fin), entreprise, localisation, et liste à puces des responsabilités (séparées par des retours à la ligne).
+6. **Projets** — titre, description, points forts (liste à puces), technologies utilisées.
+7. **Formations** — diplôme, établissement, dates.
+8. **Langues** — nom et niveau.
+9. **Footer** — date de mise à jour (mois et année en cours).
+
+**Fonctionnalités :**
+- **Bouton "Imprimer / PDF"** — déclenche `window.print()` pour ouvrir le dialog d'impression du navigateur, permettant d'exporter en PDF.
+- **Bouton "Éditer"** — redirige vers `/cv/placeholder` pour modifier le CV.
+- **Design responsive** — en dessous de 700px, l'en-tête passe en colonne, la grille compétences passe en 1 colonne, les dates s'empilent.
+- **Impression** — la media query `@media print` masque la barre d'actions et retire les ombres/bordures pour un rendu propre.
+- **Formatage des dates** — les dates sont affichées en format court français (ex: "Sept. 2024").
+- **Gestion des lignes** — les descriptions et highlights sont découpés par `\n` et affichés en liste à puces.
+
+**Styles SCSS :** Le fichier `cv-preview.component.scss` reprend fidèlement le design de `proCv.html` : typographie Segoe UI, palette `#1a1a2e` pour les en-têtes, border-bottom sur les titres de section, grille responsive pour les compétences, et impression optimisée.
+
 ---
 
 ## Page HTML/CSS Statique (proCv.html + style.css)
@@ -167,14 +214,24 @@ Le style est pensé pour l'impression : largeur maximale de 800px centrée, typo
 
 ## Résumé du flux de données
 
+### Flux d'édition
+
 1. L'utilisateur ouvre le frontend Angular sur `localhost:4200`.
 2. `CvEditorComponent` tente de charger le CV avec `id=1` via `CvService.getCv(1)`.
 3. Le service envoie `GET http://localhost:8080/api/cv/1`.
-4. Le controller Spring récupère le CV depuis Oracle via `CvRepository`, le convertit en `CvDTO` via `CvMapper`, et le retourne enveloppé dans `ApiResponse`.
-5. Le frontend affiche les données dans les formulaires réactifs.
+4. Le controller Spring récupère le CV depuis la base via `CvRepository`, le convertit en `CvDTO` via `CvMapper`, et le retourne enveloppé dans `ApiResponse`.
+5. Le frontend affiche les données dans les formulaires réactifs (7 onglets).
 6. L'utilisateur modifie les champs et clique "Enregistrer".
 7. Le composant reconstruit l'objet CV depuis les formulaires et envoie `PUT /api/cv/1`.
 8. Le backend met à jour la base et retourne le CV mis à jour.
+
+### Flux de visualisation
+
+1. L'utilisateur clique sur "Prévisualiser" depuis l'éditeur, ou navigue directement vers `/cv/preview`.
+2. `CvPreviewComponent` appelle `CvService.getCv(1)` pour charger les données du CV.
+3. Le service envoie `GET http://localhost:8080/api/cv/1`.
+4. Le composant injecte les données dans le template Angular, qui génère dynamiquement toutes les sections (profil, certifications, compétences, expériences, projets, formations, langues).
+5. L'utilisateur peut cliquer "Imprimer / PDF" pour exporter le CV via le dialog d'impression du navigateur.
 
 ---
 
@@ -234,7 +291,7 @@ ng serve
 
 `npm install` installe les dépendances Angular (Angular Material, RxJS, etc.). `ng serve` compile l'application et lance le serveur de développement sur http://localhost:4200 avec le rechargement à chaud (hot reload).
 
-**Vérification :** Ouvrez http://localhost:4200 dans votre navigateur. Vous devriez voir l'interface de l'éditeur de CV. Si aucun CV n'existe, cliquez sur "Créer un CV" pour en créer un nouveau.
+**Vérification :** Ouvrez http://localhost:4200 dans votre navigateur. Vous devriez voir l'interface de l'éditeur de CV chargée automatiquement avec les données du CV par défaut. Cliquez sur "Prévisualiser" pour voir le CV formaté, ou éditez-le via les onglets.
 
 ### Étape 4 — Tester la page statique (optionnel)
 
@@ -266,8 +323,10 @@ curl -X POST http://localhost:8080/api/cv \
 |---------|------|-----|
 | Backend Spring Boot | 8080 | http://localhost:8080 |
 | Swagger UI | 8080 | http://localhost:8080/swagger-ui.html |
-| Frontend Angular | 4200 | http://localhost:4200 |
-| Page statique | — | `proCv.html` (fichier local) |
+| Console H2 | 8080 | http://localhost:8080/h2-console |
+| Frontend — Éditeur | 4200 | http://localhost:4200/cv |
+| Frontend — Prévisualisation | 4200 | http://localhost:4200/cv/preview |
+| Page statique (ancien) | — | `proCv.html` (fichier local) |
 
 ### En cas de problème
 
@@ -275,12 +334,4 @@ curl -X POST http://localhost:8080/api/cv \
 - **Erreurs de compilation Maven** : lancez `mvn clean install -DskipTests` pour forcer la régénération de MapStruct.
 - **npm install échoue** : supprimez le dossier `node_modules` et le fichier `package-lock.json`, puis relancez `npm install`.
 - **Le frontend ne trouve pas le backend** : vérifiez que le backend tourne sur le port 8080 et que l'URL dans `cv.service.ts` (`http://localhost:8080/api/cv`) est correcte.
-
-
-Voici les URLs (le backend doit être en cours d'exécution sur le port 8080) :
-- Console H2 : http://localhost:8080/h2-console
-- JDBC URL : jdbc:h2:mem:testdb
-- Utilisateur : sa
-- Mot de passe : (laisser vide)
-- Swagger UI : http://localhost:8080/swagger-ui.html
-- API Docs (JSON brut) : http://localhost:8080/api-docs
+- **Erreur "Erreur lors de la création du CV"** : relancez le backend — le `DataInitializer` charge automatiquement les données au démarrage, le CV est disponible directement sans création manuelle.

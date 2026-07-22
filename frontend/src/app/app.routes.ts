@@ -8,12 +8,20 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'cv',
+        redirectTo: 'cv/new',
         pathMatch: 'full'
       },
       {
-        path: 'cv',
+        path: 'cv/new',
         loadComponent: () => import('./features/cv/cv-editor.component').then(m => m.CvEditorComponent)
+      },
+      {
+        path: 'cv/:id',
+        loadComponent: () => import('./features/cv/cv-editor.component').then(m => m.CvEditorComponent)
+      },
+      {
+        path: 'cv/:id/preview',
+        loadComponent: () => import('./features/cv-preview/cv-preview.component').then(m => m.CvPreviewComponent)
       }
     ]
   }
