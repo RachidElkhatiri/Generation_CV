@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: cv-simple
+
+  profiles:
+    active: dev
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: cv_simple
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    default-schema: cv_simple
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521/XE
+    username: RACHID
+    password: Rachid123
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.OracleDialect
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS "CV_SIMPLE"\;SET SCHEMA "CV_SIMPLE"
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        default_schema: CV_SIMPLE
+    defer-datasource-initialization: true
+
+  h2:
+    console:
+      enabled: true
+
+  flyway:
+    enabled: false
