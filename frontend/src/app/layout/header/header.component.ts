@@ -11,8 +11,11 @@ import { RouterLink } from '@angular/router';
   template: `
     <mat-toolbar color="primary" class="header-toolbar">
       <mat-icon>description</mat-icon>
-      <span class="title" routerLink="/" style="cursor: pointer">CV Simple</span>
+      <span class="title" routerLink="/cv/new" style="cursor: pointer">CV Simple</span>
       <span class="spacer"></span>
+      <button mat-button routerLink="/cv/new" style="margin-right: 8px">
+        <mat-icon>add</mat-icon> Nouveau CV
+      </button>
       <span class="subtitle">Générateur de CV</span>
     </mat-toolbar>
   `,
